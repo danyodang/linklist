@@ -9,9 +9,6 @@ const nextConfig = {
         hostname: 'linklist-files.s3.amazonaws.com',
       },
     ],
-  },
-  experimental: {
-    serverActions: true,
   }
 }
 
