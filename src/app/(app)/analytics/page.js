@@ -1,63 +1,59 @@
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import Chart from "@/components/Chart";
 import SectionBox from "@/components/layout/SectionBox";
-import {Event} from "@/models/Event";
-import {Page} from "@/models/Page";
 import {faLink} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {differenceInDays, formatISO9075, isToday} from "date-fns";
-import mongoose from "mongoose";
-import {getServerSession} from "next-auth";
+import {isToday} from "date-fns";
 import {redirect} from "next/navigation";
-import {CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis} from "recharts";
-
 
 export default async function AnalyticsPage() {
-  mongoose.connect(process.env.MONGO_URI);
-  const session = await getServerSession(authOptions);
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+  
   if (!session) {
     return redirect('/');
   }
-  const page = await Page.findOne({owner: session.user.email});
 
-  const groupedViews = await Event.aggregate([
-    {
-      $match: {
-        type: 'view',
-        uri: page.uri,
-      }
-    },
-    {
-      $group: {
-        _id: {
-          $dateToString: {
-            date: "$createdAt",
-            format: "%Y-%m-%d"
-          },
-        },
-        count: {
-          "$count": {},
-        }
-      },
-    },
-    {
-      $sort: {_id: 1}
-    }
-  ]);
+  const { data: page } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('owner_id', session.user.id)
+    .single();
 
-  const clicks = await Event.find({
-    page: page.uri,
-    type: 'click',
-  });
+  if (!page) {
+    return redirect('/account');
+  }
+
+  const { data: views } = await supabase
+    .from('events')
+    .select('created_at')
+    .eq('type', 'view')
+    .eq('page_id', page.id);
+
+  const { data: clicks } = await supabase
+    .from('events')
+    .select('*')
+    .eq('type', 'click')
+    .eq('page_id', page.id);
+
+  // Group views by date
+  const groupedViews = views?.reduce((acc, view) => {
+    const date = new Date(view.created_at).toISOString().split('T')[0];
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {});
+
+  const viewsData = Object.entries(groupedViews || {}).map(([date, count]) => ({
+    date,
+    views: count,
+  }));
 
   return (
     <div>
       <SectionBox>
         <h2 className="text-xl mb-6 text-center">Views</h2>
-        <Chart data={groupedViews.map(o => ({
-          'date': o._id,
-          'views': o.count,
-        }))} />
+        <Chart data={viewsData} />
       </SectionBox>
       <SectionBox>
         <h2 className="text-xl mb-6 text-center">Clicks</h2>
@@ -74,14 +70,7 @@ export default async function AnalyticsPage() {
             <div className="text-center">
               <div className="border rounded-md p-2 mt-1 md:mt-0">
                 <div className="text-3xl">
-                  {
-                    clicks
-                      .filter(
-                        c => c.uri === link.url
-                          && isToday(c.createdAt)
-                      )
-                      .length
-                  }
+                  {clicks?.filter(c => c.uri === link.url && isToday(new Date(c.created_at))).length}
                 </div>
                 <div className="text-gray-400 text-xs uppercase font-bold">clicks today</div>
               </div>
@@ -89,7 +78,7 @@ export default async function AnalyticsPage() {
             <div className="text-center">
               <div className="border rounded-md p-2 mt-1 md:mt-0">
                 <div className="text-3xl">
-                  {clicks.filter(c => c.uri === link.url).length}
+                  {clicks?.filter(c => c.uri === link.url).length}
                 </div>
                 <div className="text-gray-400 text-xs uppercase font-bold">clicks total</div>
               </div>

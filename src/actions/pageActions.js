@@ -1,72 +1,73 @@
 'use server';
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
-import {Page} from "@/models/Page";
-import {User} from "@/models/User";
-import mongoose from "mongoose";
-import {getServerSession} from "next-auth";
+import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function savePageSettings(formData) {
-  mongoose.connect(process.env.MONGO_URI);
-  const session = await getServerSession(authOptions);
-  if (session) {
-    const dataKeys = [
-      'displayName','location',
-      'bio', 'bgType', 'bgColor', 'bgImage',
-    ];
+  const supabase = createServerActionClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) return false;
 
-    const dataToUpdate = {};
-    for (const key of dataKeys) {
-      if (formData.has(key)) {
-        dataToUpdate[key] = formData.get(key);
-      }
+  const dataKeys = [
+    'displayName','location',
+    'bio', 'bgType', 'bgColor', 'bgImage',
+  ];
+
+  const dataToUpdate = {};
+  for (const key of dataKeys) {
+    if (formData.has(key)) {
+      // Convert camelCase to snake_case for database columns
+      const dbKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      dataToUpdate[dbKey] = formData.get(key);
     }
-
-    await Page.updateOne(
-      {owner:session?.user?.email},
-      dataToUpdate,
-    );
-
-    if (formData.has('avatar')) {
-      const avatarLink = formData.get('avatar');
-      await User.updateOne(
-        {email: session.user?.email},
-        {image: avatarLink},
-      );
-    }
-
-    return true;
   }
 
-  return false;
+  const { error: pageError } = await supabase
+    .from('pages')
+    .update(dataToUpdate)
+    .eq('owner_id', session.user.id);
+
+  if (formData.has('avatar')) {
+    const { error: userError } = await supabase
+      .from('users')
+      .update({ image: formData.get('avatar') })
+      .eq('id', session.user.id);
+    
+    if (userError) return false;
+  }
+
+  return !pageError;
 }
 
 export async function savePageButtons(formData) {
-  mongoose.connect(process.env.MONGO_URI);
-  const session = await getServerSession(authOptions);
-  if (session) {
-    const buttonsValues = {};
-    formData.forEach((value, key) => {
-      buttonsValues[key] = value;
-    });
-    const dataToUpdate = {buttons:buttonsValues};
-    await Page.updateOne(
-      {owner:session?.user?.email},
-      dataToUpdate,
-    );
-    return true;
-  }
-  return false;
+  const supabase = createServerActionClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) return false;
+
+  const buttonsValues = {};
+  formData.forEach((value, key) => {
+    buttonsValues[key] = value;
+  });
+
+  const { error } = await supabase
+    .from('pages')
+    .update({ buttons: buttonsValues })
+    .eq('owner_id', session.user.id);
+
+  return !error;
 }
 
 export async function savePageLinks(links) {
-  mongoose.connect(process.env.MONGO_URI);
-  const session = await getServerSession(authOptions);
-  if (session) {
-    await Page.updateOne(
-      {owner:session?.user?.email},
-      {links},
-    );
-  } else {
-    return false;
-  }
+  const supabase = createServerActionClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) return false;
+
+  const { error } = await supabase
+    .from('pages')
+    .update({ links })
+    .eq('owner_id', session.user.id);
+
+  return !error;
 }
