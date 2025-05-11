@@ -1,19 +1,19 @@
-import clientPromise from "@/libs/mongoClient";
-import {MongoDBAdapter} from "@auth/mongodb-adapter";
-import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
-export const authOptions = {
-  secret: process.env.SECRET,
-  adapter: MongoDBAdapter(clientPromise),
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET
-    })
-  ],
-};
+export async function GET(request) {
+  const supabase = createRouteHandlerClient({ cookies });
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get('code');
 
-const handler = NextAuth(authOptions)
+  if (code) {
+    await supabase.auth.exchangeCodeForSession(code);
+  }
 
-export { handler as GET, handler as POST }
+  return Response.redirect(new URL('/account', request.url));
+}
+
+export async function POST(request) {
+  const supabase = createRouteHandlerClient({ cookies });
+  return Response.json(await supabase.auth.getSession());
+}
