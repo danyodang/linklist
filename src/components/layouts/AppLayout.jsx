@@ -1,5 +1,7 @@
 import { Outlet } from 'react-router-dom'
-import AppSidebar from '../AppSidebar'
+import AppSidebar from '../layout/AppSidebar'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBars } from '@fortawesome/free-solid-svg-icons'
 
 export default function AppLayout() {
   return (
