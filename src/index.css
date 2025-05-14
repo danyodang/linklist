@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input[type="text"],
+textarea {
+  @apply w-full block mb-2 p-2 border rounded-md;
+}
+
+.radio-togglers {
+  @apply inline-flex gap-1 p-1 bg-gray-200 rounded-md;
+}
+
+.radio-togglers input {
+  @apply hidden;
+}
+
+.radio-togglers input:checked + div {
+  @apply bg-white text-blue-500;
+}
+
+.radio-togglers div {
+  @apply p-2 px-4 rounded-md flex items-center gap-2 cursor-pointer;
+}
