@@ -1,6 +1,7 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {faImage, faPalette} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
-export default function RadioTogglers({ options, defaultValue, onChange }) {
+export default function RadioTogglers({options,defaultValue,onChange}) {
   return (
     <div className="radio-togglers shadow">
       {options.map(option => (
@@ -10,8 +11,7 @@ export default function RadioTogglers({ options, defaultValue, onChange }) {
             name="bgType"
             onClick={ev => onChange(ev.target.value)}
             defaultChecked={defaultValue === option.value}
-            value={option.value}
-          />
+            value={option.value}/>
           <div>
             <FontAwesomeIcon icon={option.icon} />
             <span>{option.label}</span>
@@ -19,5 +19,5 @@ export default function RadioTogglers({ options, defaultValue, onChange }) {
         </label>
       ))}
     </div>
-  )
+  );
 }

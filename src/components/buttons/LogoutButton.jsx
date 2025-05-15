@@ -1,20 +1,18 @@
-'use client';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 
 export default function LogoutButton({
   className = 'flex items-center gap-2 border p-2 px-4 shadow',
   iconLeft = false,
   iconClasses = '',
 }) {
-  const router = useRouter();
-  const supabase = createClientComponentClient();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.refresh();
+    navigate('/');
   };
 
   return (
