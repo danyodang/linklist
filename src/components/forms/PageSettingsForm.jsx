@@ -1,56 +1,101 @@
-'use client';
-import {savePageSettings} from "@/actions/pageActions";
-import SubmitButton from "@/components/buttons/SubmitButton";
-import RadioTogglers from "@/components/formItems/radioTogglers";
-import SectionBox from "@/components/layout/SectionBox";
-import {upload} from "@/libs/upload";
-import {faCloudArrowUp, faImage, faPalette, faSave, faUpload} from "@fortawesome/free-solid-svg-icons";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import Image from "next/image";
-import {useState} from "react";
-import toast from "react-hot-toast";
+import { useState } from 'react'
+import { supabase } from '../../lib/supabase'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+  faCloudArrowUp,
+  faImage,
+  faPalette,
+  faSave
+} from '@fortawesome/free-solid-svg-icons'
+import SectionBox from '../layout/SectionBox'
+import RadioTogglers from '../formItems/RadioTogglers'
+import { uploadFile } from '../../api/upload'
+import toast from 'react-hot-toast'
 
+export default function PageSettingsForm({ page, user }) {
+  const [bgType, setBgType] = useState(page.bg_type)
+  const [bgColor, setBgColor] = useState(page.bg_color)
+  const [bgImage, setBgImage] = useState(page.bg_image)
+  const [avatar, setAvatar] = useState(user?.user_metadata?.avatar_url)
 
-export default function PageSettingsForm({page,user}) {
-  const [bgType, setBgType] = useState(page.bgType);
-  const [bgColor, setBgColor] = useState(page.bgColor);
-  const [bgImage, setBgImage] = useState(page.bgImage);
-  const [avatar, setAvatar] = useState(user?.image);
-  async function saveBaseSettings(formData) {
-    const result = await savePageSettings(formData);
-    if (result) {
-      toast.success('Saved!');
+  async function saveBaseSettings(ev) {
+    ev.preventDefault()
+    const formData = new FormData(ev.target)
+    
+    const dataToUpdate = {
+      display_name: formData.get('displayName'),
+      location: formData.get('location'),
+      bio: formData.get('bio'),
+      bg_type: bgType,
+      bg_color: bgColor,
+      bg_image: bgImage,
+    }
+
+    const { error: pageError } = await supabase
+      .from('pages')
+      .update(dataToUpdate)
+      .eq('owner_id', user.id)
+
+    if (avatar !== user.user_metadata.avatar_url) {
+      const { error: userError } = await supabase.auth.updateUser({
+        data: { avatar_url: avatar }
+      })
+
+      if (userError) {
+        toast.error('Failed to update avatar')
+        return
+      }
+    }
+
+    if (!pageError) {
+      toast.success('Settings saved!')
     }
   }
 
   async function handleCoverImageChange(ev) {
-    await upload(ev, link => {
-      setBgImage(link);
-    });
+    const file = ev.target.files?.[0]
+    if (file) {
+      try {
+        const imageUrl = await uploadFile(file)
+        setBgImage(imageUrl)
+        toast.success('Image uploaded!')
+      } catch (e) {
+        toast.error('Upload failed')
+      }
+    }
   }
+
   async function handleAvatarImageChange(ev) {
-    await upload(ev, link => {
-      setAvatar(link);
-    });
+    const file = ev.target.files?.[0]
+    if (file) {
+      try {
+        const imageUrl = await uploadFile(file)
+        setAvatar(imageUrl)
+        toast.success('Avatar uploaded!')
+      } catch (e) {
+        toast.error('Upload failed')
+      }
+    }
   }
+
   return (
     <div>
       <SectionBox>
-        <form action={saveBaseSettings}>
+        <form onSubmit={saveBaseSettings}>
           <div
             className="py-4 -m-4 min-h-[300px] flex justify-center items-center bg-cover bg-center"
             style={
               bgType === 'color'
-                ? {backgroundColor:bgColor}
-                : {backgroundImage:`url(${bgImage})`}
+                ? {backgroundColor: bgColor}
+                : {backgroundImage: `url(${bgImage})`}
             }
           >
             <div>
               <RadioTogglers
-                defaultValue={page.bgType}
+                defaultValue={page.bg_type}
                 options={[
-                  {value:'color', icon: faPalette, label: 'Color'},
-                  {value:'image', icon: faImage, label: 'Image'},
+                  {value: 'color', icon: faPalette, label: 'Color'},
+                  {value: 'image', icon: faImage, label: 'Image'},
                 ]}
                 onChange={val => setBgType(val)}
               />
@@ -62,24 +107,24 @@ export default function PageSettingsForm({page,user}) {
                       type="color"
                       name="bgColor"
                       onChange={ev => setBgColor(ev.target.value)}
-                      defaultValue={page.bgColor} />
+                      defaultValue={page.bg_color}
+                    />
                   </div>
                 </div>
               )}
               {bgType === 'image' && (
                 <div className="flex justify-center">
-                  <label
-                    className="bg-white shadow px-4 py-2 mt-2 flex gap-2"
-                  >
-                    <input type="hidden" name="bgImage" value={bgImage}/>
+                  <label className="bg-white shadow px-4 py-2 mt-2 flex gap-2">
                     <input
                       type="file"
                       onChange={handleCoverImageChange}
-                      className="hidden"/>
+                      className="hidden"
+                    />
                     <div className="flex gap-2 items-center cursor-pointer">
                       <FontAwesomeIcon
                         icon={faCloudArrowUp}
-                        className="text-gray-700" />
+                        className="text-gray-700"
+                      />
                       <span>Change image</span>
                     </div>
                   </label>
@@ -90,19 +135,23 @@ export default function PageSettingsForm({page,user}) {
           <div className="flex justify-center -mb-12">
             <div className="relative -top-8 w-[128px] h-[128px]">
               <div className="overflow-hidden h-full rounded-full border-4 border-white shadow shadow-black/50">
-                <Image
+                <img
                   className="w-full h-full object-cover"
                   src={avatar}
-                  alt={'avatar'}
-                  width={128} height={128} />
+                  alt="avatar"
+                />
               </div>
               <label
                 htmlFor="avatarIn"
                 className="absolute bottom-0 -right-2 bg-white p-2 rounded-full shadow shadow-black/50 aspect-square flex items-center cursor-pointer">
-                <FontAwesomeIcon size={'xl'} icon={faCloudArrowUp} />
+                <FontAwesomeIcon size="xl" icon={faCloudArrowUp} />
               </label>
-              <input onChange={handleAvatarImageChange} id="avatarIn" type="file" className="hidden"/>
-              <input type="hidden" name="avatar" value={avatar}/>
+              <input
+                onChange={handleAvatarImageChange}
+                id="avatarIn"
+                type="file"
+                className="hidden"
+              />
             </div>
           </div>
           <div className="p-0">
@@ -111,30 +160,35 @@ export default function PageSettingsForm({page,user}) {
               type="text"
               id="nameIn"
               name="displayName"
-              defaultValue={page.displayName}
-              placeholder="John Doe"/>
+              defaultValue={page.display_name}
+              placeholder="John Doe"
+            />
             <label className="input-label" htmlFor="locationIn">Location</label>
             <input
               type="text"
               id="locationIn"
               name="location"
               defaultValue={page.location}
-              placeholder="Somewhere in the world"/>
+              placeholder="Somewhere in the world"
+            />
             <label className="input-label" htmlFor="bioIn">Bio</label>
             <textarea
               name="bio"
               defaultValue={page.bio}
               id="bioIn"
-              placeholder="Your bio goes here..." />
+              placeholder="Your bio goes here..."
+            />
             <div className="max-w-[200px] mx-auto">
-              <SubmitButton>
+              <button
+                type="submit"
+                className="bg-blue-500 text-white w-full py-2 px-4 rounded-md flex items-center justify-center gap-2">
                 <FontAwesomeIcon icon={faSave} />
                 <span>Save</span>
-              </SubmitButton>
+              </button>
             </div>
           </div>
         </form>
       </SectionBox>
     </div>
-  );
+  )
 }
