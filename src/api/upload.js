@@ -1,25 +1,26 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { supabase } from '../lib/supabase'
 import uniqid from 'uniqid'
 
 export async function uploadFile(file) {
-  const s3Client = new S3Client({
-    region: 'us-east-1',
-    credentials: {
-      accessKeyId: import.meta.env.VITE_S3_ACCESS_KEY,
-      secretAccessKey: import.meta.env.VITE_S3_SECRET_ACCESS_KEY,
-    },
-  })
-
   const ext = file.name.split('.').pop()
   const newFilename = uniqid() + '.' + ext
+  const filePath = `public/${newFilename}`
 
-  await s3Client.send(new PutObjectCommand({
-    Bucket: import.meta.env.VITE_BUCKET_NAME,
-    Key: newFilename,
-    ACL: 'public-read',
-    Body: file,
-    ContentType: file.type,
-  }))
+  const { data, error } = await supabase.storage
+    .from('files')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type,
+    })
 
-  return `https://${import.meta.env.VITE_BUCKET_NAME}.s3.amazonaws.com/${newFilename}`
+  if (error) {
+    throw error
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('files')
+    .getPublicUrl(filePath)
+
+  return publicUrl
 }
