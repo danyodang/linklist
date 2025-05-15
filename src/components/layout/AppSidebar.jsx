@@ -1,5 +1,5 @@
 'use client';
-import LogoutButton from "@/components/buttons/LogoutButton";
+import LogoutButton from "@/components/buttons/LogoutButton.jsx";
 import {faFileLines} from "@fortawesome/free-regular-svg-icons";
 import {faArrowLeft, faChartLine} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
