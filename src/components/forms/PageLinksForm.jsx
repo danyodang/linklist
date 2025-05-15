@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faCloudArrowUp,
+  faGripLines,
   faLink,
   faPlus,
   faSave,
@@ -10,6 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import SectionBox from '../layout/SectionBox'
 import toast from 'react-hot-toast'
+import { uploadFile } from '../../api/upload'
 
 export default function PageLinksForm({ page, user }) {
   const [links, setLinks] = useState(page.links || [])
@@ -39,23 +41,21 @@ export default function PageLinksForm({ page, user }) {
   async function handleUpload(ev, linkKeyForUpload) {
     const file = ev.target.files?.[0]
     if (file) {
-      const formData = new FormData()
-      formData.append('file', file)
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-      if (response.ok) {
-        const link = await response.json()
+      try {
+        const imageUrl = await uploadFile(file)
         setLinks(prev => {
           const newLinks = [...prev]
           newLinks.forEach(link => {
             if (link.key === linkKeyForUpload) {
-              link.icon = link
+              link.icon = imageUrl
             }
           })
-          return newLinks
+          return [...newLinks]
         })
+        toast.success('Image uploaded!')
+      } catch (e) {
+        console.error('Upload error:', e)
+        toast.error('Upload failed')
       }
     }
   }
@@ -90,9 +90,15 @@ export default function PageLinksForm({ page, user }) {
           />
           <span>Add new</span>
         </button>
-        <div className="">
+        <div>
           {links.map(l => (
             <div key={l.key} className="mt-8 md:flex gap-6 items-center">
+              <div className="handle">
+                <FontAwesomeIcon
+                  className="text-gray-500 mr-2 cursor-ns-resize"
+                  icon={faGripLines}
+                />
+              </div>
               <div className="text-center">
                 <div className="bg-gray-300 inline-block relative aspect-square overflow-hidden w-16 h-16 inline-flex justify-center items-center">
                   {l.icon ? (
