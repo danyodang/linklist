@@ -26,9 +26,21 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/app/account`,
+            data: {
+              full_name: email.split('@')[0], // Use part before @ as name
+            }
+          }
         })
         if (error) throw error
-        toast.success('Check your email for the confirmation link!')
+        // Sign in immediately after sign up
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (signInError) throw signInError
+        navigate('/app/account')
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
