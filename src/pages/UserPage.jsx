@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLocationDot, faLink } from '@fortawesome/free-solid-svg-icons'
+import { faLocationDot, faLink, faPhone } from '@fortawesome/free-solid-svg-icons'
 import {
   faDiscord,
   faFacebook,
