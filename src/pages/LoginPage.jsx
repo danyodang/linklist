@@ -19,7 +19,7 @@ export default function LoginPage() {
     checkUser()
   }, [navigate])
 
-  const handleEmailSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     try {
       if (isSignUp) {
@@ -29,12 +29,12 @@ export default function LoginPage() {
           options: {
             emailRedirectTo: `${window.location.origin}/app/account`,
             data: {
-              full_name: email.split('@')[0], // Use part before @ as name
+              full_name: email.split('@')[0],
             }
           }
         })
         if (error) throw error
-        // Sign in immediately after sign up
+        
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -54,38 +54,25 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/app/account`
-      }
-    })
-
-    if (error) {
-      toast.error('Error signing in with Google')
-    }
-  }
-
   return (
-    <div>
-      <div className="p-4 max-w-xs mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-2">
-          {isSignUp ? 'Sign Up' : 'Sign In'}
+    <div className="bg-black min-h-screen">
+      <div className="p-4 max-w-xs mx-auto pt-32">
+        <h1 className="text-6xl font-mono font-bold tracking-tighter mb-6">
+          {isSignUp ? 'SIGN UP' : 'SIGN IN'}
         </h1>
-        <p className="text-center mb-6 text-gray-500">
+        <p className="text-gray-400 mb-8 font-mono">
           {isSignUp 
-            ? 'Create a new account' 
-            : 'Sign in to your account'}
+            ? 'Create your HYPR/LINK account' 
+            : 'Welcome back to HYPR/LINK'}
         </p>
 
-        <form onSubmit={handleEmailSubmit} className="mb-4">
+        <form onSubmit={handleSubmit} className="mb-8">
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full mb-2 p-2 border rounded"
+            className="w-full mb-4 font-mono"
             required
           />
           <input
@@ -93,39 +80,22 @@ export default function LoginPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full mb-4 p-2 border rounded"
+            className="w-full mb-6 font-mono"
             required
           />
           <button 
             type="submit"
-            className="bg-blue-500 text-white w-full py-2 rounded mb-4">
-            {isSignUp ? 'Sign Up' : 'Sign In'}
+            className="bg-white text-black w-full py-4 font-mono hover:bg-gray-200 transition-colors">
+            {isSignUp ? 'CREATE ACCOUNT' : 'SIGN IN'}
           </button>
         </form>
 
-        <div className="text-center mb-4">
-          <button 
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-blue-500 text-sm">
-            {isSignUp 
-              ? 'Already have an account? Sign In' 
-              : "Don't have an account? Sign Up"}
-          </button>
-        </div>
-
-        <div className="relative mb-4">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
-          </div>
-        </div>
-
         <button 
-          onClick={handleGoogleSignIn}
-          className="bg-white shadow text-center w-full py-4 flex gap-3 items-center justify-center">
-          <span>Sign In with Google</span>
+          onClick={() => setIsSignUp(!isSignUp)}
+          className="text-white font-mono hover:underline text-sm">
+          {isSignUp 
+            ? 'Already have an account? Sign In' 
+            : "Don't have an account? Sign Up"}
         </button>
       </div>
     </div>
