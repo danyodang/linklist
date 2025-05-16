@@ -48,7 +48,7 @@ export default function UsernameForm({ desiredUsername }) {
         Grab your username
       </h1>
       <p className="text-center mb-6 text-gray-500">
-        Choose your username
+        Choose your username for hyprlink.ai
       </p>
       <div className="max-w-xs mx-auto">
         <input
@@ -65,7 +65,7 @@ export default function UsernameForm({ desiredUsername }) {
         )}
         <button
           type="submit"
-          className="bg-blue-500 text-white w-full py-2 px-4 rounded-md flex items-center justify-center gap-2">
+          className="bg-white text-black w-full py-2 px-4 font-mono hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
           <span>Claim your username</span>
           <FontAwesomeIcon icon={faArrowRight} />
         </button>

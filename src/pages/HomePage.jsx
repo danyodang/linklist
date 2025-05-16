@@ -32,7 +32,7 @@ export default function HomePage() {
           onSubmit={handleSubmit}
           className="inline-flex items-center border-4 border-white">
           <span className="bg-black py-4 pl-4 font-mono">
-            hyprlink.to/
+            hyprlink.ai/
           </span>
           <input
             type="text"
