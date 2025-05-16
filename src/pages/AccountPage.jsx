@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import PageSettingsForm from '../components/forms/PageSettingsForm'
-import PageButtonsForm from '../components/forms/PageButtonsForm'
-import PageLinksForm from '../components/forms/PageLinksForm'
-import UsernameForm from '../components/forms/UsernameForm'
+import PageSettingsForm from '../components/forms/PageSettingsForm.jsx'
+import PageButtonsForm from '../components/forms/PageButtonsForm.jsx'
+import PageLinksForm from '../components/forms/PageLinksForm.jsx'
+import UsernameForm from '../components/forms/UsernameForm.jsx'
 
 export default function AccountPage() {
   const [searchParams] = useSearchParams()
