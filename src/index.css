@@ -2,13 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  @apply bg-black text-white;
+}
+
 input[type="text"],
 textarea {
-  @apply w-full block mb-2 p-2 border rounded-md;
+  @apply w-full block mb-2 p-2 border-2 border-white bg-black text-white font-mono;
 }
 
 .radio-togglers {
-  @apply inline-flex gap-1 p-1 bg-gray-200 rounded-md;
+  @apply inline-flex gap-1 p-1 bg-white text-black;
 }
 
 .radio-togglers input {
@@ -16,9 +20,9 @@ textarea {
 }
 
 .radio-togglers input:checked + div {
-  @apply bg-white text-blue-500;
+  @apply bg-black text-white;
 }
 
 .radio-togglers div {
-  @apply p-2 px-4 rounded-md flex items-center gap-2 cursor-pointer;
+  @apply p-2 px-4 flex items-center gap-2 cursor-pointer font-mono;
 }
